@@ -1,0 +1,26 @@
+this_file := $(lastword $(MAKEFILE_LIST))
+
+MAKEFLAGS += --warn-undefined-variables
+
+minimum_make_version := 4.1
+current_make_version := $(MAKE_VERSION)
+
+ifneq ($(minimum_make_version), $(firstword $(sort $(current_make_version) $(minimum_make_version))))
+$(error You need GNU make version $(minimum_make_version) or greater. You have $(current_make_version))
+endif
+
+.POSIX:
+SHELL := /bin/sh
+
+.DEFAULT_GOAL := help
+
+column1_helptext_width := 15
+column2_helptext_width := 55
+column3_helptext_width := 25
+
+
+.PHONY: help
+help: ## show this help
+	@ printf "\033[36m%-$(column1_helptext_width)s\033[0m%-$(column2_helptext_width)s\033[93m%-$(column3_helptext_width)s\033[92m%s\033[0m\n" "target" "description" "arguments" "defaults" >&2
+	@ printf "%s\n" "------------------------------------------------------------------------------------------------------------------------------------" >&2
+	@ grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk -F ":.*?## |[\\\|] " '{printf "\033[36m%-$(column1_helptext_width)s\033[0m%-$(column2_helptext_width)s\033[93m%-$(column3_helptext_width)s\033[92m%s\033[0m\n", $$1, $$2, $$3, $$4}' >&2
