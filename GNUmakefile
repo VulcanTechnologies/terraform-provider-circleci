@@ -18,9 +18,16 @@ column1_helptext_width := 15
 column2_helptext_width := 55
 column3_helptext_width := 25
 
+circleci_spec_url := https://circleci.com/api/v2/openapi.json
+circleci_spec_path := $(CURDIR)/spec/openapi.json
+
 
 .PHONY: help
 help: ## show this help
 	@ printf "\033[36m%-$(column1_helptext_width)s\033[0m%-$(column2_helptext_width)s\033[93m%-$(column3_helptext_width)s\033[92m%s\033[0m\n" "target" "description" "arguments" "defaults" >&2
 	@ printf "%s\n" "------------------------------------------------------------------------------------------------------------------------------------" >&2
 	@ grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk -F ":.*?## |[\\\|] " '{printf "\033[36m%-$(column1_helptext_width)s\033[0m%-$(column2_helptext_width)s\033[93m%-$(column3_helptext_width)s\033[92m%s\033[0m\n", $$1, $$2, $$3, $$4}' >&2
+
+.PHONY: download_api_spec
+download_api_spec: ## download CircleCI api v2 spec
+	curl --fail --output '$(circleci_spec_path)' --silent '$(circleci_spec_url)'
