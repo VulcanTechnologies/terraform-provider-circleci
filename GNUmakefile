@@ -43,4 +43,10 @@ download_api_spec: ## download CircleCI api v2 spec
 
 .PHONY: remove_preview
 remove_preview: download_api_spec ## remove preview paths from CircleCI api v2 spec
+	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=jq'
 	jq '. as $$in | $$in.paths |= (map_values(with_entries(select(.value.tags | inside($$in | [.tags[].name] - [.tags[] | select(has("x-displayName")) | select(."x-displayName" | contains("Preview")) | .name])))) | with_entries(select(.value != {})))' < '$(circleci_spec_path)'
+
+.PHONY: check_command
+check_command: command ?=
+check_command:
+	@ command -v '$(command)' > /dev/null || { printf "\n\nrequires %s but that command was not found\n\n" '$(command)' >&2 ; exit 1; }
