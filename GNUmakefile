@@ -32,7 +32,7 @@ circleci_spec_path := $(CURDIR)/spec/openapi.json
 circleci_non_preview_spec_path := $(CURDIR)/spec/openapi-non-preview.json
 
 spectral_docker_image := docker.io/stoplight/spectral:5.6.0
-container_runtime := docker
+container_runtime ?= docker
 
 
 .PHONY: help
