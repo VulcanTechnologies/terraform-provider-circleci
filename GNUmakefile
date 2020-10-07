@@ -36,6 +36,8 @@ openapi_generator_image := docker.io/openapitools/openapi-generator-cli:v4.3.1
 container_runtime ?= docker
 
 generated_client_path := $(CURDIR)/client
+git_repo_id := terraform-provider-circleci
+git_user_id := vulcantechnologies
 
 
 .PHONY: help
@@ -66,10 +68,13 @@ generate_client: ## generate a client from the spec
 		--user '$(shell id --user):$(shell id --group)' \
 		'$(openapi_generator_image)' \
 			generate \
+			--additional-properties isGoSubmodule=true \
 			--generator-name go \
 			--input-spec '$(circleci_non_preview_spec_path)' \
 			--output '$(generated_client_path)' \
 			--package-name client
+	sed --in-place 's/GIT_REPO_ID/$(git_repo_id)/g' ./client/go.mod
+	sed --in-place 's/GIT_USER_ID/$(git_user_id)/g' ./client/go.mod
 	go fmt ./client
 
 .PHONY: check_command
