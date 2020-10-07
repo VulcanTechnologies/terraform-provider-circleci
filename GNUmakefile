@@ -31,3 +31,7 @@ help: ## show this help
 .PHONY: download_api_spec
 download_api_spec: ## download CircleCI api v2 spec
 	curl --fail --output '$(circleci_spec_path)' --silent '$(circleci_spec_url)'
+
+.PHONY: remove_preview
+remove_preview: download_api_spec ## remove preview paths from CircleCI api v2 spec
+	jq '. as $$in | $$in.paths |= (map_values(with_entries(select(.value.tags | inside($$in | [.tags[].name] - [.tags[] | select(has("x-displayName")) | select(."x-displayName" | contains("Preview")) | .name])))) | with_entries(select(.value != {})))' < '$(circleci_spec_path)'
