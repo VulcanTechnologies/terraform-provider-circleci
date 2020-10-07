@@ -32,7 +32,10 @@ circleci_spec_path := $(CURDIR)/spec/openapi.json
 circleci_non_preview_spec_path := $(CURDIR)/spec/openapi-non-preview.json
 
 spectral_docker_image := docker.io/stoplight/spectral:5.6.0
+openapi_generator_image := docker.io/openapitools/openapi-generator-cli:v4.3.1
 container_runtime ?= docker
+
+generated_client_path := $(CURDIR)/client
 
 
 .PHONY: help
@@ -53,6 +56,21 @@ generate_spec: ## download api v2 spec and remove preview paths from it
 		--tty \
 		--workdir '$(CURDIR)' \
 		'$(spectral_docker_image)' lint --fail-severity error --verbose '$(circleci_non_preview_spec_path)'
+
+.PHONY: generate_client
+generate_client: ## generate a client from the spec
+	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=$(container_runtime)'
+	$(container_runtime) run \
+		--rm \
+		--mount='type=bind,src=$(CURDIR),target=$(CURDIR)' \
+		--user '$(shell id --user):$(shell id --group)' \
+		'$(openapi_generator_image)' \
+			generate \
+			--generator-name go \
+			--input-spec '$(circleci_non_preview_spec_path)' \
+			--output '$(generated_client_path)' \
+			--package-name client
+	go fmt ./client
 
 .PHONY: check_command
 check_command: command ?=
