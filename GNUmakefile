@@ -68,7 +68,9 @@ generate_client: ## generate a client from the spec
 			--package-name client
 	sed --in-place 's/GIT_REPO_ID/$(git_repo_id)/g' ./client/go.mod
 	sed --in-place 's/GIT_USER_ID/$(git_user_id)/g' ./client/go.mod
-	go fmt ./client
+	cd '$(generated_client_path)' && go fmt
+	cd '$(generated_client_path)' && go mod tidy
+	cd '$(generated_client_path)' && go vet
 
 .PHONY: check_command
 check_command: command ?=
