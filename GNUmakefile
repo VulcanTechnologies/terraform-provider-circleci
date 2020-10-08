@@ -53,6 +53,8 @@ generate_spec: ## download api v2 spec and remove preview paths from it
 .PHONY: generate_client
 generate_client: ## generate a client from the spec
 	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=$(container_runtime)'
+	rm --recursive '$(generated_client_path)'
+	mkdir --parents '$(generated_client_path)'
 	$(container_runtime) run \
 		--rm \
 		--mount='type=bind,src=$(CURDIR),target=$(CURDIR)' \
