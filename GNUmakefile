@@ -51,7 +51,7 @@ generate_spec: ## download api v2 spec and remove preview paths from it
 	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=jq'
 	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=$(container_runtime)'
 	curl --fail --output '$(circleci_spec_path)' --silent '$(circleci_spec_url)'
-	jq '. as $$in | $$in.paths |= (map_values(with_entries(select(.value.tags | inside($$in | [.tags[].name] - [.tags[] | select(has("x-displayName")) | select(."x-displayName" | contains("Preview")) | .name] | . + ["Project"])))) | with_entries(select(.value != {})))' < '$(circleci_spec_path)' > '$(circleci_non_preview_spec_path)'
+	jq '. as $$in | $$in.paths |= (map_values(with_entries(select(.value.tags | inside($$in | [.tags[].name] - [.tags[] | select(has("x-displayName")) | select(."x-displayName" | contains("Preview")) | .name] | . + ["Project"])))) | with_entries(select(.value != {}))) | delpaths([path(.. | select(type=="object") | select(has("anyOf")))])' < '$(circleci_spec_path)' > '$(circleci_non_preview_spec_path)'
 	$(container_runtime) run \
 		--mount='type=bind,src=$(CURDIR),target=$(CURDIR),ro' \
 		--rm \
