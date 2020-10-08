@@ -950,11 +950,6 @@ paths:
                   example: v3.1.4159
                   type: string
                 parameters:
-                  additionalProperties:
-                    anyOf:
-                    - type: integer
-                    - type: string
-                    - type: boolean
                   description: An object containing pipeline parameters and their
                     values.
                   example:
@@ -1365,11 +1360,6 @@ components:
           example: v3.1.4159
           type: string
         parameters:
-          additionalProperties:
-            anyOf:
-            - type: integer
-            - type: string
-            - type: boolean
           description: An object containing pipeline parameters and their values.
           example:
             deploy_prod: true
