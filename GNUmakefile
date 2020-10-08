@@ -75,10 +75,9 @@ generate_client: ## generate a client from the spec
 			--input-spec '$(circleci_non_preview_spec_path)' \
 			--output '$(generated_client_path)' \
 			--package-name client
-	sed --in-place 's/GIT_REPO_ID/$(git_repo_id)/g' '$(generated_client_path)/go.mod'
-	sed --in-place 's/GIT_USER_ID/$(git_user_id)/g' '$(generated_client_path)/go.mod'
+	rm --force '$(generated_client_path)/go.mod'
+	rm --force '$(generated_client_path)/go.mod'
 	cd '$(generated_client_path)' && go fmt
-	cd '$(generated_client_path)' && go mod tidy
 	cd '$(generated_client_path)' && go vet
 
 .PHONY: check_command
