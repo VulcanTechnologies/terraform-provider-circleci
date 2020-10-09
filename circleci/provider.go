@@ -35,7 +35,9 @@ func Provider() *schema.Provider {
 				DefaultFunc: schema.EnvDefaultFunc("CIRCLECI_API_KEY", nil),
 			},
 		},
-		ResourcesMap: map[string]*schema.Resource{},
+		ResourcesMap: map[string]*schema.Resource{
+			"circleci_environment_variable": resourceEnvironmentVariable(),
+		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"circleci_project": dataSourceProject(),
 		},
