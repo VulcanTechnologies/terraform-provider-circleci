@@ -13,7 +13,7 @@ func dataSourceProject() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceProjectRead,
 		Schema: map[string]*schema.Schema{
-			"slug": {
+			"project_slug": {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: assureSlugHasValidVCS,
@@ -36,7 +36,7 @@ func assureSlugHasValidVCS(slug interface{}, _ cty.Path) diag.Diagnostics {
 		return nil
 	}
 
-	return diag.Errorf("A slug must begin with 'gh/' or 'bb/' depending on your vcs provider.")
+	return diag.Errorf("A project_slug must begin with 'gh/' or 'bb/' depending on your vcs provider.")
 }
 
 func dataSourceProjectRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -45,7 +45,7 @@ func dataSourceProjectRead(ctx context.Context, d *schema.ResourceData, m interf
 	api := provider.circleCiClient.ProjectApi
 	auth := provider.authenticateContext(ctx)
 
-	slug := d.Get("slug").(string)
+	slug := d.Get("project_slug").(string)
 
 	project, _, err := api.GetProjectBySlug(auth, slug)
 	if err != nil {

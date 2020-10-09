@@ -16,25 +16,25 @@ const githubOrg = "StephenWithPH"
 const githubRepo = "terraform-provider-circleci-acceptance-test-target"
 
 var testCircleCiSlug = fmt.Sprintf("gh/%s/%s", githubOrg, githubRepo)
-var testDataSourceProject = fmt.Sprintf("data \"circleci_project\" \"test\" { slug=\"%s\" }", testCircleCiSlug)
+var testDataSourceProject = fmt.Sprintf("data \"circleci_project\" \"test\" { project_slug=\"%s\" }", testCircleCiSlug)
 
 const testDataSourceStateKey = "data.circleci_project.test"
 
 func TestProjectDataSource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
-		"data source argument for slug is named as expected": func(t *testing.T) {
+		"data source argument for project_slug is named as expected": func(t *testing.T) {
 			require.Contains(t, Provider().DataSourcesMap, "circleci_project")
-			assert.Contains(t, Provider().DataSourcesMap["circleci_project"].Schema, "slug")
+			assert.Contains(t, Provider().DataSourcesMap["circleci_project"].Schema, "project_slug")
 		},
-		"data source argument for slug is string": func(t *testing.T) {
+		"data source argument for project_slug is string": func(t *testing.T) {
 			require.Contains(t, Provider().DataSourcesMap, "circleci_project")
-			require.Contains(t, Provider().DataSourcesMap["circleci_project"].Schema, "slug")
-			assert.Equal(t, schema.TypeString, Provider().DataSourcesMap["circleci_project"].Schema["slug"].Type)
+			require.Contains(t, Provider().DataSourcesMap["circleci_project"].Schema, "project_slug")
+			assert.Equal(t, schema.TypeString, Provider().DataSourcesMap["circleci_project"].Schema["project_slug"].Type)
 		},
-		"data source argument for slug is required": func(t *testing.T) {
+		"data source argument for project_slug is required": func(t *testing.T) {
 			require.Contains(t, Provider().DataSourcesMap, "circleci_project")
-			require.Contains(t, Provider().DataSourcesMap["circleci_project"].Schema, "slug")
-			assert.True(t, Provider().DataSourcesMap["circleci_project"].Schema["slug"].Required)
+			require.Contains(t, Provider().DataSourcesMap["circleci_project"].Schema, "project_slug")
+			assert.True(t, Provider().DataSourcesMap["circleci_project"].Schema["project_slug"].Required)
 		},
 		"data source argument for name is named as expected": func(t *testing.T) {
 			require.Contains(t, Provider().DataSourcesMap, "circleci_project")
@@ -90,7 +90,7 @@ func TestAccProjectDataSource(t *testing.T) {
 				},
 			})
 		},
-		"errors when slug does not start with allowed values": func(t *testing.T) {
+		"errors when project_slug does not start with allowed values": func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
 				PreCheck: func() {
 					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
@@ -98,8 +98,8 @@ func TestAccProjectDataSource(t *testing.T) {
 				ProviderFactories: providerFactories,
 				Steps: []resource.TestStep{
 					{
-						Config:      `data "circleci_project" "test" { slug="nope"}`,
-						ExpectError: regexp.MustCompile(`A slug must begin with 'gh/' or 'bb/' depending on your vcs provider.`),
+						Config:      `data "circleci_project" "test" { project_slug="nope"}`,
+						ExpectError: regexp.MustCompile(`A project_slug must begin with 'gh/' or 'bb/' depending on your vcs provider.`),
 					},
 				},
 			})
