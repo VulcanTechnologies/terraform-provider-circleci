@@ -23,7 +23,7 @@ func resourceEnvironmentVariable() *schema.Resource {
 		ReadContext:   resourceEnvironmentVariableRead,
 		DeleteContext: resourceEnvironmentVariableDelete,
 		Schema: map[string]*schema.Schema{
-			"slug": {
+			"project_slug": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,

@@ -20,24 +20,24 @@ import (
 
 func TestEnvironmentVariableResource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
-		"resource argument for slug is named as expected": func(t *testing.T) {
+		"resource argument for project_slug is named as expected": func(t *testing.T) {
 			require.Contains(t, Provider().ResourcesMap, "circleci_environment_variable")
-			assert.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "slug")
+			assert.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "project_slug")
 		},
-		"resource argument for slug is string": func(t *testing.T) {
+		"resource argument for project_slug is string": func(t *testing.T) {
 			require.Contains(t, Provider().ResourcesMap, "circleci_environment_variable")
-			require.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "slug")
-			assert.Equal(t, schema.TypeString, Provider().ResourcesMap["circleci_environment_variable"].Schema["slug"].Type)
+			require.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "project_slug")
+			assert.Equal(t, schema.TypeString, Provider().ResourcesMap["circleci_environment_variable"].Schema["project_slug"].Type)
 		},
-		"resource argument for slug is required": func(t *testing.T) {
+		"resource argument for project_slug is required": func(t *testing.T) {
 			require.Contains(t, Provider().ResourcesMap, "circleci_environment_variable")
-			require.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "slug")
-			assert.True(t, Provider().ResourcesMap["circleci_environment_variable"].Schema["slug"].Required)
+			require.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "project_slug")
+			assert.True(t, Provider().ResourcesMap["circleci_environment_variable"].Schema["project_slug"].Required)
 		},
-		"changing resource argument for slug forces new": func(t *testing.T) {
+		"changing resource argument for project_slug forces new": func(t *testing.T) {
 			require.Contains(t, Provider().ResourcesMap, "circleci_environment_variable")
-			require.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "slug")
-			assert.True(t, Provider().ResourcesMap["circleci_environment_variable"].Schema["slug"].ForceNew)
+			require.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "project_slug")
+			assert.True(t, Provider().ResourcesMap["circleci_environment_variable"].Schema["project_slug"].ForceNew)
 		},
 		"resource argument for name is named as expected": func(t *testing.T) {
 			require.Contains(t, Provider().ResourcesMap, "circleci_environment_variable")
