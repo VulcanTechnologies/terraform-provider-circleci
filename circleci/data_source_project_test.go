@@ -13,6 +13,7 @@ package circleci
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -95,6 +96,20 @@ func TestAccProjectDataSource(t *testing.T) {
 							resource.TestCheckResourceAttr(testDataSourceStateKey, "id", testCircleCiSlug),
 							resource.TestCheckResourceAttr(testDataSourceStateKey, "name", githubRepo),
 							resource.TestCheckResourceAttr(testDataSourceStateKey, "organization_name", githubOrg)),
+					},
+				},
+			})
+		},
+		"errors when slug does not start with allowed values": func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				PreCheck: func() {
+					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
+				},
+				ProviderFactories: providerFactories,
+				Steps: []resource.TestStep{
+					{
+						Config:      `data "circleci_project" "test" { slug="nope"}`,
+						ExpectError: regexp.MustCompile(`A slug must begin with 'gh/' or 'bb/' depending on your vcs provider.`),
 					},
 				},
 			})
