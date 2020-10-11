@@ -45,12 +45,6 @@ func TestProvider(t *testing.T) {
 	}
 }
 
-var providerFactories = map[string]func() (*schema.Provider, error){
-	"circleci": func() (*schema.Provider, error) {
-		return Provider(), nil
-	},
-}
-
 func TestAccProvider(t *testing.T) {
 	circleCiAPIKey := os.Getenv("CIRCLECI_API_KEY")
 
