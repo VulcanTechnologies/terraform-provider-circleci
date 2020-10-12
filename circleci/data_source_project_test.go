@@ -88,7 +88,7 @@ func TestAccProjectDataSource(t *testing.T) {
 				PreCheck: func() {
 					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
 				},
-				ProviderFactories: providerFactories,
+				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
 						Config: testDataSourceProject,
@@ -105,7 +105,7 @@ func TestAccProjectDataSource(t *testing.T) {
 				PreCheck: func() {
 					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
 				},
-				ProviderFactories: providerFactories,
+				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
 						Config:      `data "circleci_project" "test" { project_slug="nope"}`,

@@ -22,6 +22,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var testAccProvider *schema.Provider
+
+var testAccProviders = map[string]func() (*schema.Provider, error){
+	"circleci": func() (*schema.Provider, error) {
+		if testAccProvider == nil {
+			testAccProvider = Provider()
+		}
+		return testAccProvider, nil
+	},
+}
+
 func TestProvider(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"provider internal validate does not error": func(t *testing.T) {
@@ -60,7 +71,7 @@ func TestAccProvider(t *testing.T) {
 				PreCheck: func() {
 					require.NoError(t, os.Unsetenv("CIRCLECI_API_KEY"))
 				},
-				ProviderFactories: providerFactories,
+				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
 						Config:      testDataSourceProject,
@@ -74,7 +85,7 @@ func TestAccProvider(t *testing.T) {
 				PreCheck: func() {
 					require.NoError(t, os.Setenv("CIRCLECI_API_KEY", circleCiAPIKey))
 				},
-				ProviderFactories: providerFactories,
+				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
 						Config: testDataSourceProject,
@@ -87,7 +98,7 @@ func TestAccProvider(t *testing.T) {
 				PreCheck: func() {
 					require.NoError(t, os.Unsetenv("CIRCLECI_API_KEY"))
 				},
-				ProviderFactories: providerFactories,
+				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
 						Config: fmt.Sprintf("provider \"circleci\" { api_key= \"%s\"}\n", circleCiAPIKey) + testDataSourceProject,
