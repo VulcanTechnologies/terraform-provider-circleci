@@ -11,12 +11,22 @@
 package circleci
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"net/http"
+	"os"
+	"regexp"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+const testResourceEnvironmentVariableStateKey = "circleci_environment_variable.test"
 
 func TestEnvironmentVariableResource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
@@ -77,9 +87,94 @@ func TestEnvironmentVariableResource(t *testing.T) {
 			require.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "value")
 			assert.True(t, Provider().ResourcesMap["circleci_environment_variable"].Schema["value"].ForceNew)
 		},
+		"resource argument for value is sensitive": func(t *testing.T) {
+			require.Contains(t, Provider().ResourcesMap, "circleci_environment_variable")
+			require.Contains(t, Provider().ResourcesMap["circleci_environment_variable"].Schema, "value")
+			assert.True(t, Provider().ResourcesMap["circleci_environment_variable"].Schema["value"].Sensitive)
+		},
 	}
 
 	for testCaseName, testCase := range testCases {
 		t.Run(testCaseName, testCase)
+	}
+}
+
+func TestAccEnvironmentVariableResource(t *testing.T) {
+	testCases := map[string]func(*testing.T){
+		"resource creates and deletes as expected": func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				PreCheck: func() {
+					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
+				},
+				ProviderFactories: testAccProviders,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+            resource "circleci_environment_variable" "test" {
+              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+              name         = "FOO"
+              value        = "BAR"
+            }
+            `,
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr(testResourceEnvironmentVariableStateKey, "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
+							resource.TestCheckResourceAttr(testResourceEnvironmentVariableStateKey, "name", "FOO"),
+							resource.TestCheckResourceAttr(testResourceEnvironmentVariableStateKey, "value", "BAR"),
+						),
+					},
+				},
+				CheckDestroy: confirmEnvironmentVariableResourceDestroyed,
+			})
+		},
+		"errors when project_slug does not start with allowed values": func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				PreCheck: func() {
+					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
+				},
+				ProviderFactories: testAccProviders,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+            resource "circleci_environment_variable" "test" {
+              project_slug = "nope"
+              name         = "FOO"
+              value        = "BAR"
+            }
+            `,
+						ExpectError: regexp.MustCompile(`A project_slug must begin with 'gh/' or 'bb/' depending on your vcs provider.`),
+					},
+				},
+			})
+		},
+	}
+
+	for testCaseName, testCase := range testCases {
+		t.Run(testCaseName, testCase)
+	}
+}
+
+func confirmEnvironmentVariableResourceDestroyed(state *terraform.State) error {
+	if state.Empty() {
+		return errors.New("state should not be empty")
+	}
+
+	resourceAttributes := state.RootModule().Resources[testResourceEnvironmentVariableStateKey].Primary.Attributes
+
+	provider := testAccProvider.Meta().(*providerContext)
+	auth := provider.authenticateContext(context.Background())
+	api := provider.circleCiClient.ProjectApi
+
+	slug := resourceAttributes["project_slug"]
+	name := resourceAttributes["name"]
+
+	_, resp, _ := api.GetEnvVar(auth, slug, name)
+
+	switch resp.StatusCode {
+	case http.StatusNotFound: //unfortunately, this could mask a permissions error, but if we've gotten this far, the permissions error should have previously surfaced
+		return nil
+	case http.StatusOK:
+		return fmt.Errorf("the environment variable named '%s' still exists", name)
+	default:
+		return fmt.Errorf("received unexpeced status code %d when checking if the environment variable named '%s' still exists", resp.StatusCode, name)
 	}
 }
