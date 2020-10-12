@@ -74,7 +74,11 @@ func TestAccProvider(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config:      testDataSourceProject,
+						Config: `
+            data "circleci_project" "test" {
+              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+            }
+            `,
 						ExpectError: regexp.MustCompile(`The argument "api_key" is required, but was not set.`),
 					},
 				},
@@ -88,7 +92,11 @@ func TestAccProvider(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: testDataSourceProject,
+						Config: `
+            data "circleci_project" "test" {
+              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+            }
+            `,
 					},
 				},
 			})
@@ -101,7 +109,7 @@ func TestAccProvider(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: fmt.Sprintf("provider \"circleci\" { api_key= \"%s\"}\n", circleCiAPIKey) + testDataSourceProject,
+						Config: fmt.Sprintf("provider \"circleci\" { api_key = \"%s\" }\ndata \"circleci_project\" \"test\" { project_slug = \"gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target\" }", circleCiAPIKey),
 					},
 				},
 			})

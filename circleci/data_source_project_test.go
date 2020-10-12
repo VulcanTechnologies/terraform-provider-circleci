@@ -11,8 +11,6 @@
 package circleci
 
 import (
-	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -21,14 +19,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-const githubOrg = "VulcanTechnologies"
-const githubRepo = "terraform-provider-circleci-acceptance-test-target"
-
-var testCircleCiSlug = fmt.Sprintf("gh/%s/%s", githubOrg, githubRepo)
-var testDataSourceProject = fmt.Sprintf("data \"circleci_project\" \"test\" { project_slug=\"%s\" }", testCircleCiSlug)
-
-const testDataSourceStateKey = "data.circleci_project.test"
 
 func TestProjectDataSource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
@@ -85,30 +75,32 @@ func TestAccProjectDataSource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"attributes are set as expected": func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
-				PreCheck: func() {
-					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
-				},
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: testDataSourceProject,
+						Config: `
+            data "circleci_project" "test" {
+              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+            }
+            `,
 						Check: resource.ComposeTestCheckFunc(
-							resource.TestCheckResourceAttr(testDataSourceStateKey, "id", testCircleCiSlug),
-							resource.TestCheckResourceAttr(testDataSourceStateKey, "name", githubRepo),
-							resource.TestCheckResourceAttr(testDataSourceStateKey, "organization_name", githubOrg)),
+							resource.TestCheckResourceAttr("data.circleci_project.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
+							resource.TestCheckResourceAttr("data.circleci_project.test", "name", "terraform-provider-circleci-acceptance-test-target"),
+							resource.TestCheckResourceAttr("data.circleci_project.test", "organization_name", "VulcanTechnologies")),
 					},
 				},
 			})
 		},
 		"errors when project_slug does not start with allowed values": func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
-				PreCheck: func() {
-					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
-				},
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config:      `data "circleci_project" "test" { project_slug="nope"}`,
+						Config: `
+            data "circleci_project" "test" {
+              project_slug = "nope"
+            }
+            `,
 						ExpectError: regexp.MustCompile(`A project_slug must begin with 'gh/' or 'bb/' depending on your vcs provider.`),
 					},
 				},
