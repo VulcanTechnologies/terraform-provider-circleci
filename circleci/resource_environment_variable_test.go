@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"regexp"
 	"testing"
 
@@ -25,8 +24,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-const testResourceEnvironmentVariableStateKey = "circleci_environment_variable.test"
 
 func TestEnvironmentVariableResource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
@@ -104,7 +101,7 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 		"resource creates and deletes as expected": func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
 				PreCheck: func() {
-					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
+					assureNoExistingEnvironmentVariables(t, "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target")
 				},
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
@@ -117,9 +114,65 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
             }
             `,
 						Check: resource.ComposeTestCheckFunc(
-							resource.TestCheckResourceAttr(testResourceEnvironmentVariableStateKey, "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
-							resource.TestCheckResourceAttr(testResourceEnvironmentVariableStateKey, "name", "FOO"),
-							resource.TestCheckResourceAttr(testResourceEnvironmentVariableStateKey, "value", "BAR"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "FOO"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "BAR"),
+						),
+					},
+				},
+				CheckDestroy: confirmEnvironmentVariableResourceDestroyed,
+			})
+		},
+		"resource handles argument changes": func(t *testing.T) {
+			resource.Test(t, resource.TestCase{
+				PreCheck: func() {
+					assureNoExistingEnvironmentVariables(t, "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target")
+				},
+				ProviderFactories: testAccProviders,
+				Steps: []resource.TestStep{
+					{
+						Config: `
+            resource "circleci_environment_variable" "test" {
+              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+              name         = "FOO"
+              value        = "BAR"
+            }
+            `,
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "FOO"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "BAR"),
+							confirmEnvironmentVariableResourceExists,
+						),
+					},
+					{
+						Config: `
+            resource "circleci_environment_variable" "test" {
+              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+              name         = "SPAM"
+              value        = "BAR"
+            }
+            `,
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/SPAM"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "SPAM"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "BAR"),
+							confirmEnvironmentVariableResourceExists,
+						),
+					},
+					{
+						Config: `
+            resource "circleci_environment_variable" "test" {
+              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+              name         = "SPAM"
+              value        = "EGGS"
+            }
+            `,
+						Check: resource.ComposeTestCheckFunc(
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/SPAM"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "SPAM"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "EGGS"),
+							confirmEnvironmentVariableResourceExists,
 						),
 					},
 				},
@@ -128,9 +181,6 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 		},
 		"errors when project_slug does not start with allowed values": func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
-				PreCheck: func() {
-					require.NotEmpty(t, os.Getenv("CIRCLECI_API_KEY"))
-				},
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
@@ -153,28 +203,94 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 	}
 }
 
-func confirmEnvironmentVariableResourceDestroyed(state *terraform.State) error {
-	if state.Empty() {
-		return errors.New("state should not be empty")
-	}
-
-	resourceAttributes := state.RootModule().Resources[testResourceEnvironmentVariableStateKey].Primary.Attributes
+func assureNoExistingEnvironmentVariables(t *testing.T, slug string) {
+	t.Helper()
 
 	provider := testAccProvider.Meta().(*providerContext)
 	auth := provider.authenticateContext(context.Background())
 	api := provider.circleCiClient.ProjectApi
 
-	slug := resourceAttributes["project_slug"]
-	name := resourceAttributes["name"]
+	envVars, resp, err := api.ListEnvVars(auth, slug)
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, resp.StatusCode)
+	require.Empty(t, envVars.Items)
+}
+
+func environmentVariableExistsInProject(slug, name string) (bool, error) {
+
+	provider := testAccProvider.Meta().(*providerContext)
+	auth := provider.authenticateContext(context.Background())
+	api := provider.circleCiClient.ProjectApi
 
 	_, resp, _ := api.GetEnvVar(auth, slug, name)
 
 	switch resp.StatusCode {
 	case http.StatusNotFound: //unfortunately, this could mask a permissions error, but if we've gotten this far, the permissions error should have previously surfaced
-		return nil
+		return false, nil
 	case http.StatusOK:
-		return fmt.Errorf("the environment variable named '%s' still exists", name)
+		return true, nil
 	default:
-		return fmt.Errorf("received unexpeced status code %d when checking if the environment variable named '%s' still exists", resp.StatusCode, name)
+		return false, fmt.Errorf("received unexpeced status code %d when checking if the environment variable named '%s' still exists", resp.StatusCode, name)
 	}
+}
+
+func confirmEnvironmentVariableResourceDestroyed(state *terraform.State) error {
+	if state.Empty() {
+		return errors.New("pre-destroy state should not be empty")
+	}
+
+	for _, resource := range state.RootModule().Resources {
+		if resource.Type != "circleci_environment_variable" {
+			continue
+		}
+
+		resourceAttributes := resource.Primary.Attributes
+		slug := resourceAttributes["project_slug"]
+		name := resourceAttributes["name"]
+
+		exists, err := environmentVariableExistsInProject(slug, name)
+
+		if err != nil {
+			return err
+		}
+
+		if exists {
+			return fmt.Errorf("the environment variable named '%s' still exists", name)
+		}
+
+		return nil
+	}
+
+	return errors.New("did not find any resources of type circleci_environment_variable in pre-destroy state")
+}
+
+func confirmEnvironmentVariableResourceExists(state *terraform.State) error {
+	if state.Empty() {
+		return errors.New("state should not be empty")
+	}
+
+	for _, resource := range state.RootModule().Resources {
+		if resource.Type != "circleci_environment_variable" {
+			continue
+		}
+
+		resourceAttributes := resource.Primary.Attributes
+		slug := resourceAttributes["project_slug"]
+		name := resourceAttributes["name"]
+
+		exists, err := environmentVariableExistsInProject(slug, name)
+
+		if err != nil {
+			return err
+		}
+
+		if !exists {
+			return fmt.Errorf("the environment variable named '%s' does not exist", name)
+		}
+
+		return nil
+	}
+
+	return errors.New("did not find any resources of type circleci_environment_variable in state")
 }
