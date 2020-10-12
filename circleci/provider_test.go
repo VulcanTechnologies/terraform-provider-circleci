@@ -12,6 +12,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var testAccProvider *schema.Provider
+
+var testAccProviders = map[string]func() (*schema.Provider, error){
+	"circleci": func() (*schema.Provider, error) {
+		if testAccProvider == nil {
+			testAccProvider = Provider()
+		}
+		return testAccProvider, nil
+	},
+}
+
 func TestProvider(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"provider internal validate does not error": func(t *testing.T) {
@@ -35,12 +46,6 @@ func TestProvider(t *testing.T) {
 	}
 }
 
-var providerFactories = map[string]func() (*schema.Provider, error){
-	"circleci": func() (*schema.Provider, error) {
-		return Provider(), nil
-	},
-}
-
 func TestAccProvider(t *testing.T) {
 	circleCiAPIKey := os.Getenv("CIRCLECI_API_KEY")
 
@@ -56,10 +61,14 @@ func TestAccProvider(t *testing.T) {
 				PreCheck: func() {
 					require.NoError(t, os.Unsetenv("CIRCLECI_API_KEY"))
 				},
-				ProviderFactories: providerFactories,
+				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config:      testDataSourceProject,
+						Config: `
+            data "circleci_project" "test" {
+              project_slug = "gh/StephenWithPH/terraform-provider-circleci-acceptance-test-target"
+            }
+            `,
 						ExpectError: regexp.MustCompile(`The argument "api_key" is required, but was not set.`),
 					},
 				},
@@ -70,10 +79,14 @@ func TestAccProvider(t *testing.T) {
 				PreCheck: func() {
 					require.NoError(t, os.Setenv("CIRCLECI_API_KEY", circleCiAPIKey))
 				},
-				ProviderFactories: providerFactories,
+				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: testDataSourceProject,
+						Config: `
+            data "circleci_project" "test" {
+              project_slug = "gh/StephenWithPH/terraform-provider-circleci-acceptance-test-target"
+            }
+            `,
 					},
 				},
 			})
@@ -83,10 +96,10 @@ func TestAccProvider(t *testing.T) {
 				PreCheck: func() {
 					require.NoError(t, os.Unsetenv("CIRCLECI_API_KEY"))
 				},
-				ProviderFactories: providerFactories,
+				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: fmt.Sprintf("provider \"circleci\" { api_key= \"%s\"}\n", circleCiAPIKey) + testDataSourceProject,
+						Config: fmt.Sprintf("provider \"circleci\" { api_key = \"%s\" }\ndata \"circleci_project\" \"test\" { project_slug = \"gh/StephenWithPH/terraform-provider-circleci-acceptance-test-target\" }", circleCiAPIKey),
 					},
 				},
 			})
