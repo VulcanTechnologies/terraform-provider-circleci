@@ -27,6 +27,7 @@ func Provider() *schema.Provider {
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"circleci_environment_variable": resourceEnvironmentVariable(),
+			"circleci_additional_ssh_key":   resourceAdditionalSSHKey(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"circleci_project": dataSourceProject(),
