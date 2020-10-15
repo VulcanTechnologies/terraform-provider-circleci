@@ -117,6 +117,7 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "FOO"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "BAR"),
+							confirmEnvironmentVariableResourceExists,
 						),
 					},
 				},
