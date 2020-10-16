@@ -115,6 +115,7 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
             `,
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "FOO"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "BAR"),
 							confirmEnvironmentVariableResourceExists,
@@ -141,6 +142,7 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
             `,
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "FOO"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "BAR"),
 							confirmEnvironmentVariableResourceExists,
@@ -156,6 +158,7 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
             `,
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/SPAM"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "SPAM"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "BAR"),
 							confirmEnvironmentVariableResourceExists,
@@ -171,6 +174,7 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
             `,
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/SPAM"),
+							resource.TestCheckResourceAttr("circleci_environment_variable.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "name", "SPAM"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "value", "EGGS"),
 							confirmEnvironmentVariableResourceExists,
