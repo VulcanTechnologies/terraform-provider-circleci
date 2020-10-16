@@ -80,6 +80,14 @@ tidy: ## tidy all of the go code
 	go mod tidy
 	go mod vendor
 
+.PHONY: test
+test: ## run non-acceptance tests
+	cd '$(provider_path)' && go test
+
+.PHONY: acceptance_test
+acceptance_test: ## run acceptance_tests
+	cd '$(provider_path)' && TF_ACC=1 go test
+
 .PHONY: check_command
 check_command: command ?=
 check_command:
