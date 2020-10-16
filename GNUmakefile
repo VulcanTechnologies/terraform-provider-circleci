@@ -31,13 +31,12 @@ circleci_spec_url := https://circleci.com/api/v2/openapi.json
 circleci_spec_path := $(CURDIR)/spec/openapi.json
 circleci_non_preview_spec_path := $(CURDIR)/spec/openapi-non-preview.json
 
-spectral_docker_image := docker.io/stoplight/spectral:5.6.0
-openapi_generator_image := docker.io/openapitools/openapi-generator-cli:v4.3.1
 container_runtime ?= docker
 
+spectral_docker_image := docker.io/stoplight/spectral:5.6.0
+openapi_generator_image := docker.io/openapitools/openapi-generator-cli:v4.3.1
+
 generated_client_path := $(CURDIR)/client
-git_repo_id := terraform-provider-circleci
-git_user_id := vulcantechnologies
 
 
 .PHONY: help
