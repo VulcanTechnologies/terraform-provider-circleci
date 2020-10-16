@@ -17,7 +17,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -158,8 +157,10 @@ func sendRequestToLegacyEndpoint(ctx context.Context, verb, slug string, payload
 		return
 	}
 
+	apiKey := m.(*providerContext).apiKey
+
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Circle-Token", os.Getenv("CIRCLECI_API_KEY"))
+	req.Header.Add("Circle-Token", apiKey)
 
 	provider := m.(*providerContext)
 	client := provider.circleCiClient.GetConfig().HTTPClient
