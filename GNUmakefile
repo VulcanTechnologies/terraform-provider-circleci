@@ -67,7 +67,7 @@ generate_client: ## generate a client from the spec
 			--output '$(generated_client_path)' \
 			--package-name client
 	rm --force '$(generated_client_path)/go.mod'
-	rm --force '$(generated_client_path)/go.mod'
+	rm --force '$(generated_client_path)/go.sum'
 	cd '$(generated_client_path)' && go fmt
 	cd '$(generated_client_path)' && go vet
 
