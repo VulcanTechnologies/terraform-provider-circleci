@@ -37,6 +37,7 @@ spectral_docker_image := docker.io/stoplight/spectral:5.6.0
 openapi_generator_image := docker.io/openapitools/openapi-generator-cli:v4.3.1
 
 generated_client_path := $(CURDIR)/client
+provider_path := $(CURDIR)/circleci
 
 
 .PHONY: help
@@ -78,6 +79,15 @@ generate_client: ## generate a client from the spec
 	rm --force '$(generated_client_path)/go.sum'
 	cd '$(generated_client_path)' && go fmt
 	cd '$(generated_client_path)' && go vet
+
+.PHONY: tidy
+tidy: ## tidy all of the go code
+	cd '$(provider_path)' && go fmt
+	cd '$(provider_path)' && go vet
+	go fmt
+	go vet
+	go mod tidy
+	go mod vendor
 
 .PHONY: check_command
 check_command: command ?=
