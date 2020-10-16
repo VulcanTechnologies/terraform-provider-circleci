@@ -12,6 +12,7 @@ import (
 )
 
 type providerContext struct {
+	apiKey              string // this is an allowance for the legacy ssh key endpoint and can go away once that goes away
 	authenticateContext func(context.Context) context.Context
 	circleCiClient      *client.APIClient
 }
@@ -44,6 +45,7 @@ func createProviderContext(ctx context.Context, d *schema.ResourceData) (interfa
 	}
 
 	provider := &providerContext{
+		apiKey: d.Get("api_key").(string),
 		authenticateContext: func(ctx context.Context) context.Context {
 			return context.WithValue(ctx, client.ContextAPIKey, client.APIKey{Key: d.Get("api_key").(string)})
 		},
