@@ -22,13 +22,13 @@ circleci_spec_url := https://circleci.com/api/v2/openapi.json
 circleci_spec_path := $(CURDIR)/spec/openapi.json
 circleci_non_preview_spec_path := $(CURDIR)/spec/openapi-non-preview.json
 
-spectral_docker_image := docker.io/stoplight/spectral:5.6.0
-openapi_generator_image := docker.io/openapitools/openapi-generator-cli:v4.3.1
 container_runtime ?= docker
 
+spectral_docker_image := docker.io/stoplight/spectral:5.6.0
+openapi_generator_image := docker.io/openapitools/openapi-generator-cli:v4.3.1
+
 generated_client_path := $(CURDIR)/client
-git_repo_id := terraform-provider-circleci
-git_user_id := stephenwithph
+provider_path := $(CURDIR)/circleci
 
 
 .PHONY: help
@@ -67,9 +67,26 @@ generate_client: ## generate a client from the spec
 			--output '$(generated_client_path)' \
 			--package-name client
 	rm --force '$(generated_client_path)/go.mod'
-	rm --force '$(generated_client_path)/go.mod'
+	rm --force '$(generated_client_path)/go.sum'
 	cd '$(generated_client_path)' && go fmt
 	cd '$(generated_client_path)' && go vet
+
+.PHONY: tidy
+tidy: ## tidy all of the go code
+	cd '$(provider_path)' && go fmt
+	cd '$(provider_path)' && go vet
+	go fmt
+	go vet
+	go mod tidy
+	go mod vendor
+
+.PHONY: test
+test: ## run non-acceptance tests
+	cd '$(provider_path)' && go test
+
+.PHONY: acceptance_test
+acceptance_test: ## run acceptance_tests
+	cd '$(provider_path)' && TF_ACC=1 go test
 
 .PHONY: check_command
 check_command: command ?=
