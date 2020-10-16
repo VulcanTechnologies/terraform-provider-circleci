@@ -42,6 +42,7 @@ func dataSourceProjectRead(ctx context.Context, d *schema.ResourceData, m interf
 	}
 
 	d.SetId(project.Slug)
+	d.Set("project_slug", project.Slug)
 	d.Set("name", project.Name)
 	d.Set("organization_name", project.OrganizationName)
 

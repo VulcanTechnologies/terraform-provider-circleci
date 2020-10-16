@@ -75,6 +75,7 @@ func TestAccProjectDataSource(t *testing.T) {
             `,
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("data.circleci_project.test", "id", "gh/StephenWithPH/terraform-provider-circleci-acceptance-test-target"),
+							resource.TestCheckResourceAttr("data.circleci_project.test", "project_slug", "gh/StephenWithPH/terraform-provider-circleci-acceptance-test-target"),
 							resource.TestCheckResourceAttr("data.circleci_project.test", "name", "terraform-provider-circleci-acceptance-test-target"),
 							resource.TestCheckResourceAttr("data.circleci_project.test", "organization_name", "StephenWithPH")),
 					},
