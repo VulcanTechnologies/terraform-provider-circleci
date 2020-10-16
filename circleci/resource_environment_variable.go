@@ -3,6 +3,7 @@ package circleci
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -55,12 +56,12 @@ func resourceEnvironmentVariableCreate(ctx context.Context, d *schema.ResourceDa
 		}),
 	}
 
-	_, _, err := api.CreateEnvVar(auth, slug, envVar)
+	pair, _, err := api.CreateEnvVar(auth, slug, envVar)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	envVarPath := fmt.Sprintf("%s/%s", slug, name)
+	envVarPath := fmt.Sprintf("%s/%s", slug, pair.Name)
 	d.SetId(envVarPath)
 
 	return resourceEnvironmentVariableRead(ctx, d, m)
@@ -72,14 +73,16 @@ func resourceEnvironmentVariableRead(ctx context.Context, d *schema.ResourceData
 	api := provider.circleCiClient.ProjectApi
 	auth := provider.authenticateContext(ctx)
 
-	slug := d.Get("project_slug").(string)
-	name := d.Get("name").(string)
+	id := d.Id()
+	slug := id[:strings.LastIndex(id, "/")]
+	name := id[strings.LastIndex(id, "/")+1:]
 
 	envVar, _, err := api.GetEnvVar(auth, slug, name)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
+	d.Set("project_slug", slug)
 	d.Set("name", envVar.Name)
 	// do NOT set "value" here; CircleCI always masks the values of environment variables when returning them
 
@@ -92,8 +95,9 @@ func resourceEnvironmentVariableDelete(ctx context.Context, d *schema.ResourceDa
 	api := provider.circleCiClient.ProjectApi
 	auth := provider.authenticateContext(ctx)
 
-	slug := d.Get("project_slug").(string)
-	name := d.Get("name").(string)
+	id := d.Id()
+	slug := id[:strings.LastIndex(id, "/")]
+	name := id[strings.LastIndex(id, "/")+1:]
 
 	_, _, err := api.DeleteEnvVar(auth, slug, name)
 	if err != nil {
