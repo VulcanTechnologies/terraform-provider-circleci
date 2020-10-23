@@ -47,7 +47,7 @@ help: ## show this help
 	@ grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk -F ":.*?## |[\\\|] " '{printf "\033[36m%-$(column1_helptext_width)s\033[0m%-$(column2_helptext_width)s\033[93m%-$(column3_helptext_width)s\033[92m%s\033[0m\n", $$1, $$2, $$3, $$4}' >&2
 
 .PHONY: generate_spec
-generate_spec: ## download api v2 spec and remove preview paths from it
+generate_spec: ## download api v2 spec and remove preview paths from it | container_runtime="..." | container_runtime="docker"
 	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=jq'
 	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=$(container_runtime)'
 	curl --fail --output '$(circleci_spec_path)' --silent '$(circleci_spec_url)'
@@ -60,7 +60,7 @@ generate_spec: ## download api v2 spec and remove preview paths from it
 		'$(spectral_docker_image)' lint --fail-severity error --verbose '$(circleci_non_preview_spec_path)'
 
 .PHONY: generate_client
-generate_client: ## generate a client from the spec
+generate_client: ## generate a client from the spec | container_runtime="..." | container_runtime="docker"
 	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=$(container_runtime)'
 	rm --recursive '$(generated_client_path)'
 	mkdir --parents '$(generated_client_path)'
