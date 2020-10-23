@@ -97,6 +97,10 @@ test: ## run non-acceptance tests
 acceptance_test: ## run acceptance_tests
 	cd '$(provider_path)' && TF_ACC=1 go test
 
+.PHONY: build
+build: ## build the provider
+	go build -o terraform-provider-circleci
+
 .PHONY: check_command
 check_command: command ?=
 check_command:
