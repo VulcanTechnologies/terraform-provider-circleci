@@ -57,4 +57,8 @@ $ make test
 $ make acceptance_test
 ```
 
-Note that the tests will fail unless you have set the environment variable `CIRCLECI_API_KEY` with a valid API key.
+Note that the tests will fail unless you have set the environment variable `CIRCLECI_API_KEY` with a valid API key. Additionally, this defaults to target a specific CircleCI project for testing. Unless you have access to that project, the tests will fail. You can override the target project like so:
+
+```shell
+$ make acceptance_test target="<a valid CircleCI project slug for a project to which you have access>"
+```

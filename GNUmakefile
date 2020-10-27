@@ -24,7 +24,7 @@ SHELL := /bin/sh
 .DEFAULT_GOAL := help
 
 column1_helptext_width := 20
-column2_helptext_width := 55
+column2_helptext_width := 35
 column3_helptext_width := 25
 
 circleci_spec_url := https://circleci.com/api/v2/openapi.json
@@ -47,7 +47,7 @@ help: ## show this help
 	@ grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk -F ":.*?## |[\\\|] " '{printf "\033[36m%-$(column1_helptext_width)s\033[0m%-$(column2_helptext_width)s\033[93m%-$(column3_helptext_width)s\033[92m%s\033[0m\n", $$1, $$2, $$3, $$4}' >&2
 
 .PHONY: generate_spec
-generate_spec: ## download api v2 spec and remove preview paths from it | container_runtime="..." | container_runtime="docker"
+generate_spec: ## download api v2 spec and clean it | container_runtime="..." | container_runtime="docker"
 	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=jq'
 	@ $(MAKE) --file '$(this_file)' --no-print-directory check_command 'command=$(container_runtime)'
 	curl --fail --output '$(circleci_spec_path)' --silent '$(circleci_spec_url)'
@@ -94,8 +94,9 @@ test: ## run non-acceptance tests
 	cd '$(provider_path)' && go test
 
 .PHONY: acceptance_test
-acceptance_test: ## run acceptance_tests
-	cd '$(provider_path)' && TF_ACC=1 go test
+acceptance_test: target ?= gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target
+acceptance_test: ## run acceptance_tests | target="..." | target="gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+	cd '$(provider_path)' && TF_ACC=1 TEST_TARGET_SLUG='$(target)' go test
 
 .PHONY: build
 build: ## build the provider
