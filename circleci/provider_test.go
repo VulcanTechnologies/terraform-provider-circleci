@@ -40,17 +40,20 @@ var testAccProviders = map[string]func() (*schema.Provider, error){
 }
 
 func TestMain(m *testing.M) {
-	testSlug = os.Getenv("TEST_TARGET_SLUG")
 
-	if strings.Count(testSlug, "/") != 2 {
-		fmt.Printf("cannot parse the environment variable key 'TEST_TARGET_SLUG' with value '%s' as a valid project slug", testSlug)
-		os.Exit(1)
+	if acceptanceTest := os.Getenv("TF_ACC"); acceptanceTest != "" {
+		testSlug = os.Getenv("TEST_TARGET_SLUG")
+
+		if strings.Count(testSlug, "/") != 2 {
+			fmt.Printf("cannot parse the environment variable key 'TEST_TARGET_SLUG' with value '%s' as a valid project slug", testSlug)
+			os.Exit(1)
+		}
+
+		split := strings.Split(testSlug, "/")
+		testVcsSlug = split[0]
+		testRepoOwner = split[1]
+		testRepoName = split[2]
 	}
-
-	split := strings.Split(testSlug, "/")
-	testVcsSlug = split[0]
-	testRepoOwner = split[1]
-	testRepoName = split[2]
 
 	os.Exit(m.Run())
 }
