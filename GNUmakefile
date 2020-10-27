@@ -94,8 +94,9 @@ test: ## run non-acceptance tests
 	cd '$(provider_path)' && go test
 
 .PHONY: acceptance_test
-acceptance_test: ## run acceptance_tests
-	cd '$(provider_path)' && TF_ACC=1 go test
+acceptance_test: target ?= gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target
+acceptance_test: ## run acceptance_tests | target="..." | target="gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
+	cd '$(provider_path)' && TF_ACC=1 TEST_TARGET_SLUG='$(target)' go test
 
 .PHONY: build
 build: ## build the provider
