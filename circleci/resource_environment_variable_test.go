@@ -96,6 +96,28 @@ func TestEnvironmentVariableResource(t *testing.T) {
 	}
 }
 
+type testEnvironmentVariableResourceConfig struct {
+	projectSlug string
+	name        string
+	value       string
+}
+
+func (c testEnvironmentVariableResourceConfig) materialize() string {
+	return fmt.Sprintf(`
+    resource "circleci_environment_variable" "test" {
+      project_slug = "%s"
+      name         = "%s"
+      value        = "%s"
+    }
+  `, c.projectSlug, c.name, c.value)
+}
+
+func (c testEnvironmentVariableResourceConfig) withValidDefaultProjectSlug() testEnvironmentVariableResourceConfig {
+	newConfig := c
+	newConfig.projectSlug = fmt.Sprintf("%s/%s/%s", testVcsSlug, testRepoOwner, testRepoName)
+	return newConfig
+}
+
 func TestAccEnvironmentVariableResource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"resource creates and deletes as expected": func(t *testing.T) {
@@ -106,13 +128,11 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            resource "circleci_environment_variable" "test" {
-              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-              name         = "FOO"
-              value        = "BAR"
-            }
-            `,
+						Config: testEnvironmentVariableResourceConfig{
+							name:  "FOO",
+							value: "BAR",
+						}.withValidDefaultProjectSlug().materialize(),
+
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
@@ -133,13 +153,11 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            resource "circleci_environment_variable" "test" {
-              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-              name         = "FOO"
-              value        = "BAR"
-            }
-            `,
+						Config: testEnvironmentVariableResourceConfig{
+							name:  "FOO",
+							value: "BAR",
+						}.withValidDefaultProjectSlug().materialize(),
+
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/FOO"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
@@ -149,13 +167,11 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 						),
 					},
 					{
-						Config: `
-            resource "circleci_environment_variable" "test" {
-              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-              name         = "SPAM"
-              value        = "BAR"
-            }
-            `,
+						Config: testEnvironmentVariableResourceConfig{
+							name:  "SPAM",
+							value: "BAR",
+						}.withValidDefaultProjectSlug().materialize(),
+
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/SPAM"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
@@ -165,13 +181,11 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 						),
 					},
 					{
-						Config: `
-            resource "circleci_environment_variable" "test" {
-              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-              name         = "SPAM"
-              value        = "EGGS"
-            }
-            `,
+						Config: testEnvironmentVariableResourceConfig{
+							name:  "SPAM",
+							value: "EGGS",
+						}.withValidDefaultProjectSlug().materialize(),
+
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/SPAM"),
 							resource.TestCheckResourceAttr("circleci_environment_variable.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
@@ -189,13 +203,12 @@ func TestAccEnvironmentVariableResource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            resource "circleci_environment_variable" "test" {
-              project_slug = "nope"
-              name         = "FOO"
-              value        = "BAR"
-            }
-            `,
+						Config: testEnvironmentVariableResourceConfig{
+							projectSlug: "nope",
+							name:        "FOO",
+							value:       "BAR",
+						}.materialize(),
+
 						ExpectError: regexp.MustCompile(`A project_slug must begin with 'gh/' or 'bb/' depending on your vcs provider.`),
 					},
 				},

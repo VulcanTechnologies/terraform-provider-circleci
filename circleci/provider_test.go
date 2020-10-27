@@ -22,6 +22,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const testVcsSlug = "gh"
+const testRepoOwner = "VulcanTechnologies"
+const testRepoName = "terraform-provider-circleci-acceptance-test-target"
+
 var testAccProvider *schema.Provider
 
 var testAccProviders = map[string]func() (*schema.Provider, error){
@@ -56,6 +60,34 @@ func TestProvider(t *testing.T) {
 	}
 }
 
+type materializer interface {
+	materialize() string
+}
+
+type testProviderConfig struct {
+	apiKey string
+}
+
+func (c testProviderConfig) materialize() string {
+	if c.apiKey == "" {
+		return fmt.Sprintf(`
+      provider "circleci" {}
+  `)
+	} else {
+		return fmt.Sprintf(`
+      provider "circleci" {
+        api_key = "%s"
+      }
+  `, c.apiKey)
+	}
+}
+
+func (c testProviderConfig) materializeWithAdditionalConfig(m materializer) string {
+	providerConfig := c.materialize()
+	additionalConfig := m.materialize()
+	return fmt.Sprintf("%s\n%s", providerConfig, additionalConfig)
+}
+
 func TestAccProvider(t *testing.T) {
 	circleCiAPIKey := os.Getenv("CIRCLECI_API_KEY")
 
@@ -74,12 +106,8 @@ func TestAccProvider(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            data "circleci_project" "test" {
-              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-            }
-            `,
-						ExpectError: regexp.MustCompile(`The argument "api_key" is required, but was not set.`),
+						Config:      testProviderConfig{}.materializeWithAdditionalConfig(testProjectDataSourceConfig{}.withValidDefaultProjectSlug()),
+						ExpectError: regexp.MustCompile(`The argument "api_key" is required, but no definition was found.`),
 					},
 				},
 			})
@@ -92,11 +120,7 @@ func TestAccProvider(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            data "circleci_project" "test" {
-              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-            }
-            `,
+						Config: testProviderConfig{}.materializeWithAdditionalConfig(testProjectDataSourceConfig{}.withValidDefaultProjectSlug()),
 					},
 				},
 			})
@@ -109,7 +133,7 @@ func TestAccProvider(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: fmt.Sprintf("provider \"circleci\" { api_key = \"%s\" }\ndata \"circleci_project\" \"test\" { project_slug = \"gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target\" }", circleCiAPIKey),
+						Config: testProviderConfig{apiKey: circleCiAPIKey}.materializeWithAdditionalConfig(testProjectDataSourceConfig{}.withValidDefaultProjectSlug()),
 					},
 				},
 			})

@@ -110,6 +110,29 @@ func TestAdditionalSSHKeyResource(t *testing.T) {
 	}
 }
 
+type testAdditionalSSHKeyResourceConfig struct {
+	projectSlug        string
+	hostName           string
+	privateKeyArgument string // this could be hard-coded or a Terraform function like file()
+}
+
+func (c testAdditionalSSHKeyResourceConfig) materialize() string {
+	// since privateKeyArgument could be a Terraform function, it is not quoted by default here
+	return fmt.Sprintf(`
+    resource "circleci_additional_ssh_key" "test" {
+      project_slug  = "%s"
+      host_name     = "%s"
+      private_key   = %s
+    }
+  `, c.projectSlug, c.hostName, c.privateKeyArgument)
+}
+
+func (c testAdditionalSSHKeyResourceConfig) withValidDefaultProjectSlug() testAdditionalSSHKeyResourceConfig {
+	newConfig := c
+	newConfig.projectSlug = fmt.Sprintf("%s/%s/%s", testVcsSlug, testRepoOwner, testRepoName)
+	return newConfig
+}
+
 func TestAccAdditionalSSHKeyResource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"errors when project_slug does not start with allowed values": func(t *testing.T) {
@@ -117,13 +140,12 @@ func TestAccAdditionalSSHKeyResource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            resource "circleci_additional_ssh_key" "test" {
-              project_slug  = "nope"
-              host_name     = "FOO"
-              private_key   = file("testdata/ssh-keys/id_rsa")
-            }
-            `,
+						Config: testAdditionalSSHKeyResourceConfig{
+							projectSlug:        "nope",
+							hostName:           "FOO",
+							privateKeyArgument: `file("testdata/ssh-keys/id_rsa")`,
+						}.materialize(),
+
 						ExpectError: regexp.MustCompile(`A project_slug must begin with 'gh/' or 'bb/' depending on your vcs provider.`),
 					},
 				},
@@ -134,13 +156,11 @@ func TestAccAdditionalSSHKeyResource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            resource "circleci_additional_ssh_key" "test" {
-              project_slug  = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-              host_name     = "FOO"
-              private_key   = "nope"
-            }
-            `,
+						Config: testAdditionalSSHKeyResourceConfig{
+							hostName:           "FOO",
+							privateKeyArgument: `"nope"`,
+						}.withValidDefaultProjectSlug().materialize(),
+
 						ExpectError: regexp.MustCompile(`Received error 'ssh: no key found' while trying to parse private_key`),
 					},
 				},
@@ -154,13 +174,11 @@ func TestAccAdditionalSSHKeyResource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            resource "circleci_additional_ssh_key" "test" {
-              project_slug  = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-              host_name     = "FOO"
-              private_key   = file("testdata/ssh-keys/id_rsa")
-            }
-            `,
+						Config: testAdditionalSSHKeyResourceConfig{
+							hostName:           "FOO",
+							privateKeyArgument: `file("testdata/ssh-keys/id_rsa")`,
+						}.withValidDefaultProjectSlug().materialize(),
+
 						Check: resource.ComposeTestCheckFunc(
 							// the fingerprint is of the public key
 							resource.TestCheckResourceAttr("circleci_additional_ssh_key.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/b3:fb:7a:ff:ec:7f:8c:7c:3b:1b:24:c1:42:c6:5d:a1"),
@@ -178,13 +196,11 @@ func TestAccAdditionalSSHKeyResource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            resource "circleci_additional_ssh_key" "test" {
-              project_slug  = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-              host_name     = "FOO"
-              private_key   = file("testdata/ssh-keys/id_ecdsa")
-            }
-            `,
+						Config: testAdditionalSSHKeyResourceConfig{
+							hostName:           "FOO",
+							privateKeyArgument: `file("testdata/ssh-keys/id_ecdsa")`,
+						}.withValidDefaultProjectSlug().materialize(),
+
 						Check: resource.ComposeTestCheckFunc(
 							// the fingerprint is of the public key
 							resource.TestCheckResourceAttr("circleci_additional_ssh_key.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/aa:c6:6d:1b:4f:23:4d:9b:a7:ea:f0:ea:d7:ee:ad:45"),

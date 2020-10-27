@@ -11,6 +11,7 @@
 package circleci
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -71,6 +72,24 @@ func TestProjectDataSource(t *testing.T) {
 	}
 }
 
+type testProjectDataSourceConfig struct {
+	projectSlug string
+}
+
+func (c testProjectDataSourceConfig) withValidDefaultProjectSlug() testProjectDataSourceConfig {
+	newConfig := c
+	newConfig.projectSlug = fmt.Sprintf("%s/%s/%s", testVcsSlug, testRepoOwner, testRepoName)
+	return newConfig
+}
+
+func (c testProjectDataSourceConfig) materialize() string {
+	return fmt.Sprintf(`
+    data "circleci_project" "test" {
+      project_slug = "%s"
+    }
+  `, c.projectSlug)
+}
+
 func TestAccProjectDataSource(t *testing.T) {
 	testCases := map[string]func(*testing.T){
 		"attributes are set as expected": func(t *testing.T) {
@@ -78,11 +97,7 @@ func TestAccProjectDataSource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            data "circleci_project" "test" {
-              project_slug = "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"
-            }
-            `,
+						Config: testProjectDataSourceConfig{}.withValidDefaultProjectSlug().materialize(),
 						Check: resource.ComposeTestCheckFunc(
 							resource.TestCheckResourceAttr("data.circleci_project.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
 							resource.TestCheckResourceAttr("data.circleci_project.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
@@ -97,11 +112,9 @@ func TestAccProjectDataSource(t *testing.T) {
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
 					{
-						Config: `
-            data "circleci_project" "test" {
-              project_slug = "nope"
-            }
-            `,
+						Config: testProjectDataSourceConfig{
+							projectSlug: "nope",
+						}.materialize(),
 						ExpectError: regexp.MustCompile(`A project_slug must begin with 'gh/' or 'bb/' depending on your vcs provider.`),
 					},
 				},
