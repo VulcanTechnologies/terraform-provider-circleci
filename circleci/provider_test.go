@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -22,9 +23,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testVcsSlug = "gh"
-const testRepoOwner = "VulcanTechnologies"
-const testRepoName = "terraform-provider-circleci-acceptance-test-target"
+var testSlug string
+var testVcsSlug string
+var testRepoOwner string
+var testRepoName string
 
 var testAccProvider *schema.Provider
 
@@ -35,6 +37,22 @@ var testAccProviders = map[string]func() (*schema.Provider, error){
 		}
 		return testAccProvider, nil
 	},
+}
+
+func TestMain(m *testing.M) {
+	testSlug = os.Getenv("TEST_TARGET_SLUG")
+
+	if strings.Count(testSlug, "/") != 2 {
+		fmt.Printf("cannot parse the environment variable key 'TEST_TARGET_SLUG' with value '%s' as a valid project slug", testSlug)
+		os.Exit(1)
+	}
+
+	split := strings.Split(testSlug, "/")
+	testVcsSlug = split[0]
+	testRepoOwner = split[1]
+	testRepoName = split[2]
+
+	os.Exit(m.Run())
 }
 
 func TestProvider(t *testing.T) {

@@ -78,7 +78,7 @@ type testProjectDataSourceConfig struct {
 
 func (c testProjectDataSourceConfig) withValidDefaultProjectSlug() testProjectDataSourceConfig {
 	newConfig := c
-	newConfig.projectSlug = fmt.Sprintf("%s/%s/%s", testVcsSlug, testRepoOwner, testRepoName)
+	newConfig.projectSlug = testSlug
 	return newConfig
 }
 
@@ -99,10 +99,10 @@ func TestAccProjectDataSource(t *testing.T) {
 					{
 						Config: testProjectDataSourceConfig{}.withValidDefaultProjectSlug().materialize(),
 						Check: resource.ComposeTestCheckFunc(
-							resource.TestCheckResourceAttr("data.circleci_project.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
-							resource.TestCheckResourceAttr("data.circleci_project.test", "project_slug", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target"),
-							resource.TestCheckResourceAttr("data.circleci_project.test", "name", "terraform-provider-circleci-acceptance-test-target"),
-							resource.TestCheckResourceAttr("data.circleci_project.test", "organization_name", "VulcanTechnologies")),
+							resource.TestCheckResourceAttr("data.circleci_project.test", "id", testSlug),
+							resource.TestCheckResourceAttr("data.circleci_project.test", "project_slug", testSlug),
+							resource.TestCheckResourceAttr("data.circleci_project.test", "name", testRepoName),
+							resource.TestCheckResourceAttr("data.circleci_project.test", "organization_name", testRepoOwner)),
 					},
 				},
 			})

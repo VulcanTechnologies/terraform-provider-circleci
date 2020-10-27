@@ -129,7 +129,7 @@ func (c testAdditionalSSHKeyResourceConfig) materialize() string {
 
 func (c testAdditionalSSHKeyResourceConfig) withValidDefaultProjectSlug() testAdditionalSSHKeyResourceConfig {
 	newConfig := c
-	newConfig.projectSlug = fmt.Sprintf("%s/%s/%s", testVcsSlug, testRepoOwner, testRepoName)
+	newConfig.projectSlug = testSlug
 	return newConfig
 }
 
@@ -169,7 +169,7 @@ func TestAccAdditionalSSHKeyResource(t *testing.T) {
 		"RSA key creates and deletes as expected": func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
 				PreCheck: func() {
-					assureAdditionalSSHKeyDoesNotExist(t, "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target", "b3:fb:7a:ff:ec:7f:8c:7c:3b:1b:24:c1:42:c6:5d:a1", "FOO")
+					assureAdditionalSSHKeyDoesNotExist(t, testSlug, "b3:fb:7a:ff:ec:7f:8c:7c:3b:1b:24:c1:42:c6:5d:a1", "FOO")
 				},
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
@@ -181,7 +181,7 @@ func TestAccAdditionalSSHKeyResource(t *testing.T) {
 
 						Check: resource.ComposeTestCheckFunc(
 							// the fingerprint is of the public key
-							resource.TestCheckResourceAttr("circleci_additional_ssh_key.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/b3:fb:7a:ff:ec:7f:8c:7c:3b:1b:24:c1:42:c6:5d:a1"),
+							resource.TestCheckResourceAttr("circleci_additional_ssh_key.test", "id", fmt.Sprintf("%s/b3:fb:7a:ff:ec:7f:8c:7c:3b:1b:24:c1:42:c6:5d:a1", testSlug)),
 							resource.TestCheckResourceAttr("circleci_additional_ssh_key.test", "fingerprint", "b3:fb:7a:ff:ec:7f:8c:7c:3b:1b:24:c1:42:c6:5d:a1"),
 						),
 					},
@@ -191,7 +191,7 @@ func TestAccAdditionalSSHKeyResource(t *testing.T) {
 		"ECDSA key creates and deletes as expected": func(t *testing.T) {
 			resource.Test(t, resource.TestCase{
 				PreCheck: func() {
-					assureAdditionalSSHKeyDoesNotExist(t, "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target", "aa:c6:6d:1b:4f:23:4d:9b:a7:ea:f0:ea:d7:ee:ad:45", "FOO")
+					assureAdditionalSSHKeyDoesNotExist(t, testSlug, "aa:c6:6d:1b:4f:23:4d:9b:a7:ea:f0:ea:d7:ee:ad:45", "FOO")
 				},
 				ProviderFactories: testAccProviders,
 				Steps: []resource.TestStep{
@@ -203,7 +203,7 @@ func TestAccAdditionalSSHKeyResource(t *testing.T) {
 
 						Check: resource.ComposeTestCheckFunc(
 							// the fingerprint is of the public key
-							resource.TestCheckResourceAttr("circleci_additional_ssh_key.test", "id", "gh/VulcanTechnologies/terraform-provider-circleci-acceptance-test-target/aa:c6:6d:1b:4f:23:4d:9b:a7:ea:f0:ea:d7:ee:ad:45"),
+							resource.TestCheckResourceAttr("circleci_additional_ssh_key.test", "id", fmt.Sprintf("%s/aa:c6:6d:1b:4f:23:4d:9b:a7:ea:f0:ea:d7:ee:ad:45", testSlug)),
 							resource.TestCheckResourceAttr("circleci_additional_ssh_key.test", "fingerprint", "aa:c6:6d:1b:4f:23:4d:9b:a7:ea:f0:ea:d7:ee:ad:45"),
 						),
 					},
