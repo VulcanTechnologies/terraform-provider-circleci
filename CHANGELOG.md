@@ -2,7 +2,9 @@
 This file adheres to https://www.terraform.io/docs/extend/best-practices/versioning.html#changelog-specification
 -->
 
-## 0.1.0 (Unreleased)
+## [Unreleased](https://github.com/VulcanTechnologies/terraform-provider-circleci/compare/v1.0.0...HEAD)
+
+## [v1.0.0](https://github.com/VulcanTechnologies/terraform-provider-circleci/releases/tag/v1.0.0)
 
 FEATURES:
 
