@@ -9,6 +9,9 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 # Terraform Provider CircleCI
 
+## Contributing
+Refer to [CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Context
 Terraform best practices suggest using an existing API client library rather than commingling client logic with Terraform provider logic. At this time, there does not appear to be a CircleCI v2 API client library. Fortunately, CircleCI publishes their [OpenAPI v3 spec](https://circleci.com/api/v2/openapi.json). This allows for the generation of client libraries. Although the resulting client code is included in this repository, such an approach seems spiritually consistent with the principle of separating the client logic from the provider. Of course, an official API client library would be better. If you want to see this happen, please upvote [this item](https://ideas.circleci.com/api-feature-requests/p/provide-an-official-go-client-library-for-v2-api) on CircleCI's ideas board.
 
