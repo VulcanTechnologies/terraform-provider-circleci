@@ -14,6 +14,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 ## Before Opening a PR
 1. Run the tests per [the README](./README.md#test-the-provider).
 
+1. Tidy things:  
+    ```sh
+    $ make tidy
+    ```
+
 1. [Changelog](./CHANGELOG.md)  
   Regardless of what you contribute (new functionality, bug fixes, documentation), please [update the changelog](https://keepachangelog.com/en/1.0.0/#how).
 
@@ -24,6 +29,11 @@ file, You can obtain one at https://mozilla.org/MPL/2.0/.
 1. Cut a release branch.
 
 1. Run the tests per [the README](./README.md#test-the-provider).
+
+1. Tidy things:  
+    ```sh
+    $ make tidy
+    ```
 
 1. [Update the Changelog](https://keepachangelog.com/en/1.0.0/#effort)  
   Move unreleased items to a new, properly versioned section and update the `Unreleased` GitHub link's ref to compare `HEAD` against the latest _released_ tag.
